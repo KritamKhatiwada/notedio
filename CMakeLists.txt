@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(audio-recorder VERSION 0.1 LANGUAGES CXX)
+# This sets your project name to notedio
+project(notedio VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
@@ -10,27 +11,28 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Multimedia)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Multimedia )
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Multimedia)
 
 set(PROJECT_SOURCES
-    # UI Files (Moved to voice_input/)
+    # UI Files (Inside voiceInput/ folder)
     voiceInput/main.cpp
     voiceInput/mainwindow.cpp
     voiceInput/mainwindow.h
     voiceInput/mainwindow.ui
 
-    # # Database Files (Placeholder examples—update names if different)
+    # # Database Files (Uncomment and update when ready)
     # database/database.cpp
     # database/database.h
 
-    # # Whisper.cpp Files
+    # # Whisper.cpp Files (Uncomment and update when ready)
     # whispercpp/whisper.cpp
     # whispercpp/whisper.h
 
-    # # Llama Files
+    # # Llama Files (Uncomment and update when ready)
     # llama/llama.cpp
     # llama/llama.h
 )
+
 include_directories(
     voiceInput
     database
@@ -39,37 +41,32 @@ include_directories(
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(audio-recorder
+    # Changed executable target name to notedio
+    qt_add_executable(notedio
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
     )
-# Define target properties for Android with Qt 6 as:
-#    set_property(TARGET audio-recorder APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
-#                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
-# For more information, see https://doc.qt.io/qt-6/qt-add-executable.html#target-creation
 else()
     if(ANDROID)
-        add_library(audio-recorder SHARED
+        add_library(notedio SHARED
             ${PROJECT_SOURCES}
         )
-# Define properties for Android with Qt 5 after find_package() calls as:
-#    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
     else()
-        add_executable(audio-recorder
+        add_executable(notedio
             ${PROJECT_SOURCES}
         )
     endif()
 endif()
 
-target_link_libraries(audio-recorder PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Multimedia)
+# Changed target link libraries to notedio
+target_link_libraries(notedio PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Multimedia)
 
-# Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
-# If you are developing for iOS or macOS you should consider setting an
-# explicit, fixed bundle identifier manually though.
 if(${QT_VERSION} VERSION_LESS 6.1.0)
-  set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.audio-recorder)
+  set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.notedio)
 endif()
-set_target_properties(audio-recorder PROPERTIES
+
+# Changed properties target to notedio
+set_target_properties(notedio PROPERTIES
     ${BUNDLE_ID_OPTION}
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
@@ -78,12 +75,14 @@ set_target_properties(audio-recorder PROPERTIES
 )
 
 include(GNUInstallDirs)
-install(TARGETS audio-recorder
+# Changed install target to notedio
+install(TARGETS notedio
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
 if(QT_VERSION_MAJOR EQUAL 6)
-    qt_finalize_executable(audio-recorder)
+    # Changed finalization target to notedio
+    qt_finalize_executable(notedio)
 endif()

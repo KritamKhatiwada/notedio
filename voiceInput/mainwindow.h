@@ -6,6 +6,8 @@
 #include <QAudioInput>
 #include <QMediaRecorder>
 #include <QUrl>
+#include <QStandardPaths>
+#include <QDir>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -20,7 +22,7 @@ public:
     QMediaCaptureSession *m_mediacapturesession = nullptr;
     QAudioInput *m_audioinput;
     QMediaRecorder *m_audiorecorder;
-    static constexpr const char *savePath = "/Downloads/my_audio.wav";
+
     ~MainWindow();
 
 private slots:

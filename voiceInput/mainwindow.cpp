@@ -24,7 +24,18 @@ MainWindow::MainWindow(QWidget *parent)
     format.setFileFormat(QMediaFormat::Wave);
     format.setAudioCodec(QMediaFormat::AudioCodec::Wave);
     m_audiorecorder->setMediaFormat(format);
-    m_audiorecorder->setOutputLocation(QUrl::fromLocalFile(QDir::homePath() +savePath ));
+
+    QString baseDataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    QString whisperFolder = baseDataPath + "/whispercpp/";
+
+    QDir dir;
+    if (!dir.exists(whisperFolder)) {
+        dir.mkpath(whisperFolder);
+    }
+
+    QString savePath =whisperFolder + "audio.wav";
+    m_audiorecorder->setOutputLocation(QUrl::fromLocalFile(savePath));
+    qDebug() << "\033[1;32m 🎧 AUDIO WILL SAVE TO:" << savePath << "\033[0m";
 
     m_mediacapturesession->setAudioInput(m_audioinput);
     m_mediacapturesession->setRecorder(m_audiorecorder);
@@ -53,7 +64,7 @@ void MainWindow::onRecordClicked(){
         ui->recordBTN->setIcon(QIcon::fromTheme(QIcon::ThemeIcon::AudioInputMicrophone));
         ui->recordBTN->setText("RECORD");
         ui->recordBTN->setStyleSheet("background-color: #6d6d6d; ");
-        qDebug() << "saving the file to" << savePath;
+
     }
 
 }
