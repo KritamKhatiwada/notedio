@@ -13,29 +13,10 @@ find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Multimedia)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Multimedia )
 
 set(PROJECT_SOURCES
-    # UI Files (Moved to voice_input/)
-    voiceInput/main.cpp
-    voiceInput/mainwindow.cpp
-    voiceInput/mainwindow.h
-    voiceInput/mainwindow.ui
-
-    # # Database Files (Placeholder examples—update names if different)
-    # database/database.cpp
-    # database/database.h
-
-    # # Whisper.cpp Files
-    # whispercpp/whisper.cpp
-    # whispercpp/whisper.h
-
-    # # Llama Files
-    # llama/llama.cpp
-    # llama/llama.h
-)
-include_directories(
-    voiceInput
-    database
-    whispercpp
-    llama
+        main.cpp
+        mainwindow.cpp
+        mainwindow.h
+        mainwindow.ui
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
