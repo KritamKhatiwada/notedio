@@ -1,0 +1,72 @@
+# ==========================================
+# Qt Creator & Build Artifacts
+# ==========================================
+# Common build directories (Shadow builds)
+build*/
+CMakePresets.json
+
+# Qt Creator user-specific configurations
+*.user
+*.user.*
+*.shared
+
+# ==========================================
+# C++ / Compiler Artifacts
+# ==========================================
+# Compiled Object files
+*.o
+*.obj
+
+# Precompiled headers
+*.gch
+*.pch
+
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
+
+# Shared libraries
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Debug files
+*.pdb
+*.idb
+
+# ==========================================
+# CMake Generated Files (If using CMake)
+# ==========================================
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+
+# ==========================================
+# Qt Generated Files (If using qmake)
+# ==========================================
+.qmake.stash
+.qmake.cache
+ui_*.h
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+
+# ==========================================
+# System / IDE Files
+# ==========================================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
