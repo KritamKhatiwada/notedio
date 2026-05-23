@@ -13,6 +13,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Multimedia)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Multimedia)
 
+add_subdirectory(whisper.cpp EXCLUDE_FROM_ALL)
 set(PROJECT_SOURCES
     # UI Files (Inside voiceInput/ folder)
     voiceInput/main.cpp

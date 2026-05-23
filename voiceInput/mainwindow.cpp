@@ -25,15 +25,15 @@ MainWindow::MainWindow(QWidget *parent)
     format.setAudioCodec(QMediaFormat::AudioCodec::Wave);
     m_audiorecorder->setMediaFormat(format);
 
-    QString baseDataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-    QString whisperFolder = baseDataPath + "/whispercpp/";
+    QString appDir = QCoreApplication::applicationDirPath();
 
-    QDir dir;
-    if (!dir.exists(whisperFolder)) {
-        dir.mkpath(whisperFolder);
+    QDir audioDir(appDir);
+    if (!audioDir.exists("voiceInput")) {
+        audioDir.mkdir("voiceInput");
     }
+    audioDir.cd("voiceInput");
+    QString savePath = audioDir.filePath("input.wav");
 
-    QString savePath =whisperFolder + "audio.wav";
     m_audiorecorder->setOutputLocation(QUrl::fromLocalFile(savePath));
     qDebug() << "\033[1;32m 🎧 AUDIO WILL SAVE TO:" << savePath << "\033[0m";
 
@@ -70,6 +70,7 @@ void MainWindow::onRecordClicked(){
 }
 void MainWindow::onPauseClicked(){
 
+
     if(m_audiorecorder->recorderState() == QMediaRecorder::PausedState){
         m_audiorecorder->record();
         ui->pauseBTN->setText("PAUSE");
@@ -89,3 +90,4 @@ void MainWindow::onPauseClicked(){
         qDebug() << "Cannot pause; the recorder is currently stopped.";
     }
 }
+
