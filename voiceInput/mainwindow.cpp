@@ -1,93 +1,103 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include <QDebug>
-#include <QStandardPaths>
-#include <QMediaCaptureSession>
-#include <QAudioInput>
-#include <QMediaRecorder>
-#include <QDir>
+#include "../recording/recordingsession.h"
+#include "../database/database.h"
+#include <QTimer>
 #include <QIcon>
-#include <QUrl>
-#include <QMediaFormat>
-
-
-MainWindow::MainWindow(QWidget *parent)
+#include <QMessageBox>
+MainWindow::MainWindow(NotesRepository *repository, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    m_mediacapturesession= new QMediaCaptureSession;
-    m_audioinput= new QAudioInput;
-    m_audiorecorder= new QMediaRecorder;
-
-    QMediaFormat format;
-    format.setFileFormat(QMediaFormat::Wave);
-    format.setAudioCodec(QMediaFormat::AudioCodec::Wave);
-    m_audiorecorder->setMediaFormat(format);
-
-    QString appDir = QCoreApplication::applicationDirPath();
-
-    QDir audioDir(appDir);
-    if (!audioDir.exists("voiceInput")) {
-        audioDir.mkdir("voiceInput");
-    }
-    audioDir.cd("voiceInput");
-    QString savePath = audioDir.filePath("input.wav");
-
-    m_audiorecorder->setOutputLocation(QUrl::fromLocalFile(savePath));
-    qDebug() << "\033[1;32m 🎧 AUDIO WILL SAVE TO:" << savePath << "\033[0m";
-
-    m_mediacapturesession->setAudioInput(m_audioinput);
-    m_mediacapturesession->setRecorder(m_audiorecorder);
-
-    connect(ui->recordBTN,&QPushButton::clicked , this , &MainWindow::onRecordClicked);
-    connect(ui->pauseBTN,&QPushButton::clicked , this , &MainWindow::onPauseClicked);
-
-
+    m_session = new RecordingSession(repository, this);
+    m_uiTimer = new QTimer(this);
+    m_uiTimer->setInterval(500);
+    connect(m_uiTimer, &QTimer::timeout, this, &MainWindow::onElapsedTick);
+    connect(m_session, &RecordingSession::finalizingProgress, this, &MainWindow::onFinalizingProgress);
+    connect(m_session, &RecordingSession::noteReady, this, &MainWindow::onNoteReady);
+    connect(ui->recordBTN, &QPushButton::clicked, this, &MainWindow::onRecordClicked);
+    connect(ui->pauseBTN, &QPushButton::clicked, this, &MainWindow::onPauseClicked);
+    resetUiToIdle();
 }
-
 MainWindow::~MainWindow()
 {
     delete ui;
 }
-void MainWindow::onRecordClicked(){
-    if(m_audiorecorder->recorderState() == QMediaRecorder::StoppedState){
-    qDebug() << "recording...";
-    m_audiorecorder->record();
-     ui->recordBTN->setIcon(QIcon::fromTheme(QIcon::ThemeIcon::MediaPlaybackStop));
-    ui->recordBTN->setText("STOP");
-    ui->recordBTN->setStyleSheet("background-color: #D32F2F; color: white; font-weight: bold;");
-    }
-    else if(m_audiorecorder->recorderState() == QMediaRecorder::RecordingState){
-        qDebug() << "stoping...";
-        m_audiorecorder->stop();
-        ui->recordBTN->setIcon(QIcon::fromTheme(QIcon::ThemeIcon::AudioInputMicrophone));
-        ui->recordBTN->setText("RECORD");
-        ui->recordBTN->setStyleSheet("background-color: #6d6d6d; ");
-
-    }
-
+void MainWindow::showPopup(const QString &title, const QString &message)
+{
+    // Non-modal so it never blocks the recording/transcription pipeline
+    // running in the background.
+    QMessageBox *box = new QMessageBox(QMessageBox::Information, title, message, QMessageBox::Ok, this);
+    box->setAttribute(Qt::WA_DeleteOnClose);
+    box->setModal(false);
+    box->show();
 }
-void MainWindow::onPauseClicked(){
-
-
-    if(m_audiorecorder->recorderState() == QMediaRecorder::PausedState){
-        m_audiorecorder->record();
+void MainWindow::onRecordClicked()
+{
+    if (!m_session->isRecording() && !m_session->isPaused()) {
+        m_session->begin();
+        m_uiTimer->start();
+        ui->recordBTN->setIcon(QIcon::fromTheme(QIcon::ThemeIcon::MediaPlaybackStop));
+        ui->recordBTN->setText("STOP");
+        ui->recordBTN->setStyleSheet("background-color: #D32F2F; color: white; font-weight: bold;");
+        ui->pauseBTN->setEnabled(true);
+    } else {
+        m_session->finish();
+        m_uiTimer->stop();
+        ui->recordBTN->setEnabled(false);
+        ui->pauseBTN->setEnabled(false);
+        ui->recordBTN->setText("SAVING...");
+        showPopup("Recording Stopped", "Recording stopped. Transcribing your audio now...");
+        emit backToHomeRequested();
+    }
+}
+void MainWindow::onPauseClicked()
+{
+    if (m_session->isPaused()) {
+        m_session->resume();
         ui->pauseBTN->setText("PAUSE");
-        qDebug() << "Recording is resumed...";
-        ui->pauseBTN->setStyleSheet("background-color: #6d6d6d; ");
+        ui->pauseBTN->setStyleSheet("background-color: #6d6d6d;");
         ui->pauseBTN->setIcon(QIcon::fromTheme(QIcon::ThemeIcon::MediaPlaybackPause));
-    }
-    else if(m_audiorecorder->recorderState() == QMediaRecorder::RecordingState){
-        m_audiorecorder->pause();
-        ui->pauseBTN->setStyleSheet("background-color: #008000; color: white; font-weight: bold;");
+        m_uiTimer->start();
+    } else if (m_session->isRecording()) {
+        m_session->pause();
         ui->pauseBTN->setText("RESUME");
-        qDebug() << "Recordinng is paused.";
+        ui->pauseBTN->setStyleSheet("background-color: #008000; color: white; font-weight: bold;");
         ui->pauseBTN->setIcon(QIcon::fromTheme(QIcon::ThemeIcon::MediaPlaybackStart));
-    }
-    else if (m_audiorecorder->recorderState() == QMediaRecorder::StoppedState) {
-
-        qDebug() << "Cannot pause; the recorder is currently stopped.";
+        m_uiTimer->stop();
     }
 }
-
+void MainWindow::onElapsedTick()
+{
+    ui->lineEdit->setText(formatElapsed(m_session->elapsedMs()));
+}
+void MainWindow::onFinalizingProgress(int completed, int total)
+{
+    ui->lineEdit->setText(QString("Transcribing %1/%2").arg(completed).arg(total));
+}
+void MainWindow::onNoteReady(int noteId, bool hadFailures)
+{
+    emit noteReady(noteId, hadFailures);
+    resetUiToIdle();
+}
+void MainWindow::resetUiToIdle()
+{
+    ui->recordBTN->setEnabled(true);
+    ui->pauseBTN->setEnabled(false);
+    ui->recordBTN->setIcon(QIcon::fromTheme(QIcon::ThemeIcon::AudioInputMicrophone));
+    ui->recordBTN->setText("RECORD");
+    ui->recordBTN->setStyleSheet("background-color: #6d6d6d;");
+    ui->lineEdit->setText("00:00:00");
+}
+QString MainWindow::formatElapsed(qint64 ms) const
+{
+    const qint64 totalSeconds = ms / 1000;
+    const int hours = totalSeconds / 3600;
+    const int minutes = (totalSeconds % 3600) / 60;
+    const int seconds = totalSeconds % 60;
+    return QString("%1:%2:%3")
+        .arg(hours, 2, 10, QChar('0'))
+        .arg(minutes, 2, 10, QChar('0'))
+        .arg(seconds, 2, 10, QChar('0'));
+}

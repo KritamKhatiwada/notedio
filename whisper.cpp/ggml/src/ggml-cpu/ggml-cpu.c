@@ -2489,8 +2489,18 @@ static bool ggml_thread_apply_affinity(bool * mask) {
 
     return m != 0;
 }
+    #ifndef THREAD_POWER_THROTTLING_CURRENT_VERSION
+typedef struct _THREAD_POWER_THROTTLING_STATE {
+    ULONG Version;
+    ULONG ControlMask;
+    ULONG StateMask;
+} THREAD_POWER_THROTTLING_STATE;
+#define THREAD_POWER_THROTTLING_CURRENT_VERSION 1
+#define THREAD_POWER_THROTTLING_EXECUTION_SPEED 0x1
+#endif
 
 static bool ggml_thread_apply_priority(int32_t prio) {
+
     // Note that on Windows the Process Priority Class must be updated in order to set Thread priority.
     // This is up to the applications.
     DWORD p = THREAD_PRIORITY_NORMAL;
@@ -2543,6 +2553,8 @@ static bool ggml_thread_apply_affinity(const bool * mask) {
     UNUSED(mask);
     return true;
 }
+
+
 
 static bool ggml_thread_apply_priority(int32_t prio) {
     struct sched_param p;
