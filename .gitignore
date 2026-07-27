@@ -1,50 +1,30 @@
-# ==========================================
-# Qt Creator & Build Artifacts
-# ==========================================
-# Common build directories (Shadow builds)
+# Build artifacts
 build*/
 CMakePresets.json
-
-# Qt Creator user-specific configurations
 *.user
 *.user.*
 *.shared
 
-# ==========================================
-# C++ / Compiler Artifacts
-# ==========================================
-# Compiled Object files
+# Compiler artifacts
 *.o
 *.obj
-
-# Precompiled headers
 *.gch
 *.pch
-
-# Libraries
 *.lib
 *.a
 *.la
 *.lo
-
-# Shared libraries
 *.dll
 *.so
 *.so.*
 *.dylib
-
-# Executables
 *.exe
 *.out
 *.app
-
-# Debug files
 *.pdb
 *.idb
 
-# ==========================================
-# CMake Generated Files (If using CMake)
-# ==========================================
+# CMake
 CMakeCache.txt
 CMakeFiles/
 CMakeScripts/
@@ -53,9 +33,7 @@ cmake_install.cmake
 install_manifest.txt
 compile_commands.json
 
-# ==========================================
-# Qt Generated Files (If using qmake)
-# ==========================================
+# Qt generated
 .qmake.stash
 .qmake.cache
 ui_*.h
@@ -63,10 +41,18 @@ moc_*.cpp
 moc_*.h
 qrc_*.cpp
 
-# ==========================================
-# System / IDE Files
-# ==========================================
+# System / IDE
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
+
+# App runtime data
+voiceInput/*.wav
+voiceInput/chunks/
+database/notes/*.json
+config.json.local
+
+# External AI tools (separate clones, not part of this repo)
+whisper.cpp/
+llama.cpp/

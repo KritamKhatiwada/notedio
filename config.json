@@ -1,0 +1,26 @@
+{
+  "audioDirectory": "voiceInput",
+  "notesDirectory": "database/notes",
+  "chunkWorkDirectory": "voiceInput/chunks",
+  "chunkDurationSeconds": 20,
+  "whisperExecutable": "B:/notedio/whisper.cpp/build/bin/whisper-cli.exe",
+  "whisperModel": "B:/notedio/whisper.cpp/models/ggml-large-v3-q5_0.bin",
+  "whisperThreads": 12,
+  "whisperExtraArgs": [
+    "--translate",
+    "--max-context",
+    "0"
+  ],
+  "llamaExecutable": "B:/notedio/llama.cpp/build/bin/llama-cli.exe",
+  "llamaModel": "B:/notedio/llama.cpp/models/Llama-3.2-1B-Instruct-Q4_K_M.gguf",
+  "llamaThreads": 12,
+  "llamaExtraArgs": [
+    "-n", "512",
+    "-c", "4096",
+    "--temp", "0.2",
+    "-no-cnv",
+    "-st",
+    "--no-display-prompt"
+  ],
+  "summarizePromptTemplate": "You are a direct, analytical AI. Read the text inside <transcript> and summarize it.\n\nSTRICT RULES:\n1. DO NOT copy, repeat, or acknowledge this prompt. \n2. Start your response IMMEDIATELY with the 🎯 emoji.\n3. NO GENERIC FILLER. Never write vague sentences like 'The speaker discussed an important topic.' You must state the ACTUAL specific facts, nouns, and details from the text.\n4. If the transcript is empty or too short, write ONLY: '🛑 No valid audio detected.'\n\n<transcript>\n[Insert Transcript Here]\n</transcript>\n\n🎯 **The Big Picture**\n[Write 2-3 sentences explaining EXACTLY what this specific recording is about, using real details from the text]\n\n✨ **Key Highlights & Insights**\n* 📌 **[Specific Concept from text]:** [Detailed explanation based strictly on the text]\n* 📌 **[Specific Concept from text]:** [Detailed explanation based strictly on the text]\n\n🚀 **Action Items & Next Steps**\n* 👤 **[Name/Unassigned]**: [Specific task or write 'No actionable steps found']"
+}
