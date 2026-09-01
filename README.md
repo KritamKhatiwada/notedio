@@ -42,8 +42,8 @@ Everything logs to the terminal via `qDebug()` — recorder state changes, chunk
 * Qt 6 (Widgets, Multimedia)
 * C++17 compiler
 * CMake ≥ 3.16
-* A built `whisper.cpp` (`whisper-cli`) with a `.bin` model
-* A built `llama.cpp` (`llama-cli`) with a `.gguf` model
+* A built `whisper.cpp` (`whisper-cli`) with a `.bin` model or build whisper-cli with a model of your need inside */whisper.cpp
+* A built `llama.cpp` (`llama-cli`) with a `.gguf` model build llama-cli with a model of your need inside */llama.cpp
 
 ## Build
 
