@@ -1,51 +1,30 @@
+
 # Notedio
 
-An AI-powered voice-note summarizer. Records audio in rolling chunks, transcribes each chunk in the background via `whisper.cpp` while recording continues, lets you edit notes with rich text formatting, and summarizes any note on demand via a local `llama.cpp` model.
+**Notedio** is a desktop app that turns your voice into organized, editable notes, entirely on your own machine. Speak, and your words are transcribed while you're still talking. Tap a button, and any note is condensed into a clean summary. No cloud, no accounts, no data leaving your computer.
 
-## Architecture
+The name says it all: *note* + *audio*. Notedio helps you capture ideas the moment they come, without stopping to type.
 
-```
-notedio/
-├── CMakeLists.txt
-├── config.json                 # all paths/params live here, nothing hardcoded in source
-├── main.cpp
-├── core/
-│   ├── AppConfig.{h,cpp}        # loads config.json, resolves paths relative to the executable
-│   ├── Note.{h,cpp}             # note data model + JSON (de)serialization
-│   ├── NoteStore.{h,cpp}        # persists notes as individual JSON files in database/notes
-│   ├── AudioChunkRecorder.{h,cpp}   # records audio in rolling N-second chunks (QMediaRecorder)
-│   ├── TranscriptionEngine.{h,cpp}  # serial background queue of whisper-cli QProcess calls
-│   └── SummarizationEngine.{h,cpp}  # background queue of llama-cli QProcess calls
-├── ui/
-│   ├── MainWindow.{h,cpp}       # note list + "New Recording" button
-│   ├── RecordingWindow.{h,cpp}  # record/pause controls + live transcript
-│   ├── NoteListItemWidget.{h,cpp}   # per-note row: editor + Summarize button + summary
-│   └── NoteEditorWidget.{h,cpp}     # rich text editor: bold/italic/underline/color/highlight
-├── voiceInput/                  # raw audio chunks land here at runtime
-└── database/notes/              # one JSON file per note
-```
+## Build and Run
 
-## How chunked transcription works
+**Prerequisites**
 
-1. `AudioChunkRecorder` records into `chunk_0000.wav`, `chunk_0001.wav`, ... rotating to a new file every `chunkDurationSeconds` (default 20s, configurable in `config.json`).
-2. Each time a chunk finishes, `chunkReady` fires and `TranscriptionEngine` enqueues it. A single background `QProcess` runs `whisper-cli` per chunk, one at a time, so by the time you hit STOP, all but the last ~20s are already transcribed.
-3. Only the final (partial) chunk needs transcribing after STOP, so the wait is minimal.
-4. Chunks are reassembled in order (`transcriptProgress` / `transcriptFinalized`) into the note's transcript, which is saved as a new `Note` via `NoteStore`.
-5. `SummarizationEngine` runs `llama-cli` with a configurable prompt template whenever "Summarize" is clicked on a note.
+* Qt 6 or above with the Widgets and Multimedia modules, from https://www.qt.io/download-qt-installer
+* A C++17 compiler
+* CMake 3.16 or above
+* [`whisper.cpp`](https://github.com/ggerganov/whisper.cpp) with `whisper-cli` compiled, plus a `.bin` model of your choice
+* [`llama.cpp`](https://github.com/ggerganov/llama.cpp) with `llama-cli` compiled, plus a `.gguf` model of your choice
 
-All whisper/llama paths, thread counts, chunk duration, and the summarization prompt are defined in `config.json` next to the built executable — nothing is hardcoded in source, so swapping models or executables requires no rebuild.
+**Setting up whisper.cpp and llama.cpp**
 
-Everything logs to the terminal via `qDebug()` — recorder state changes, chunk queueing, transcription/summarization process starts and results, and note persistence.
+Notedio does not bundle the speech and language models. You need a compiled `whisper.cpp` folder and a compiled `llama.cpp` folder, and you can get them in one of two ways:
 
-## Prerequisites
+1. **Use an existing compiled folder.** If you already have `whisper.cpp` and `llama.cpp` built (with `whisper-cli`, `llama-cli` and a model for each), place them inside the project, at `notedio/whisper.cpp` and `notedio/llama.cpp`, or point to them from `config.json`.
+2. **Build them yourself.** Clone each repository into the project folder, compile it following its own instructions, and download the model you want to use. A bigger model is more accurate but slower, so pick one that suits your hardware.
 
-* Qt 6 (Widgets, Multimedia)
-* C++17 compiler
-* CMake ≥ 3.16
-* A built `whisper.cpp` (`whisper-cli`) with a `.bin` model or build whisper-cli with a model of your need inside */whisper.cpp
-* A built `llama.cpp` (`llama-cli`) with a `.gguf` model build llama-cli with a model of your need inside */llama.cpp
+Either way, make sure the executable and model paths in `config.json` match what you have.
 
-## Build
+**Build**
 
 ```bash
 mkdir build && cd build
@@ -53,12 +32,63 @@ cmake ..
 cmake --build .
 ```
 
-`config.json` is copied next to the built binary. Edit it (or point `whisperExecutable` / `llamaExecutable` / model paths to your actual binaries) before running.
+`config.json` is copied next to the built executable. Open it and point `whisperExecutable`, `llamaExecutable` and the model paths to your own binaries and models.
 
-## Run
+**Run**
 
 ```bash
 ./notedio
 ```
 
-Click **+ New Recording** → RECORD → talk → STOP. The note appears at the top of the list, fully editable, with a Summarize button underneath.
+Or open `CMakeLists.txt` in Qt Creator and click Run.
+
+## Overview
+
+### Recording
+Click **+ New Recording**, press **RECORD**, and talk. Pause and resume whenever you like, and watch the live transcript build up as you speak. Press **STOP** and your note appears at the top of the list, ready to use.
+
+### Live Transcription
+Audio is recorded in rolling chunks (20 seconds by default). Each chunk is sent to `whisper.cpp` in the background the moment it finishes, so by the time you press STOP only the last few seconds are left to process. The wait is minimal, even for long recordings.
+
+### Rich Text Editing
+Every note is fully editable. Fix a mis-heard word, or format your note with bold, italic, underline, text color and highlights.
+
+### On-Demand Summaries
+Click **Summarize** under any note and a local `llama.cpp` model writes a short summary right beneath it. The prompt template is yours to change in `config.json`.
+
+## Configuration
+
+Nothing is hardcoded. Everything lives in `config.json`, so you can swap models or executables without rebuilding:
+
+| Setting | What it controls |
+|---|---|
+| `whisperExecutable`, whisper model | Transcription binary and model |
+| `llamaExecutable`, llama model | Summarization binary and model |
+| `chunkDurationSeconds` | Length of each audio chunk |
+| thread counts | CPU threads for whisper and llama |
+| summarization prompt | Template used when you click Summarize |
+
+## Under the Hood
+
+```
+notedio/
+├── CMakeLists.txt
+├── config.json
+├── main.cpp
+├── core/
+│   ├── AppConfig               # loads config.json, resolves paths
+│   ├── Note                    # note model + JSON (de)serialization
+│   ├── NoteStore               # one JSON file per note
+│   ├── AudioChunkRecorder      # rolling chunk recording (QMediaRecorder)
+│   ├── TranscriptionEngine     # serial background whisper-cli queue
+│   └── SummarizationEngine     # background llama-cli queue
+├── ui/
+│   ├── MainWindow              # note list + New Recording
+│   ├── RecordingWindow         # controls + live transcript
+│   ├── NoteListItemWidget      # editor + Summarize + summary
+│   └── NoteEditorWidget        # rich text editor
+├── voiceInput/                 # raw audio chunks (runtime)
+└── database/notes/             # saved notes
+```
+
+Chunks are transcribed one at a time, reassembled in order, and saved as a `Note` through `NoteStore`. Recorder state, queueing, process results and persistence are all logged to the terminal via `qDebug()`, which makes debugging easy.
